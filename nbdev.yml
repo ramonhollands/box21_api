@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "box21_api"
+  site-url: "https://ramonhollands.github.io/box21_api"
+  description: "Api for Box21.ai"
+  repo-branch: master
+  repo-url: "https://github.com/ramonhollands/box21_api"
