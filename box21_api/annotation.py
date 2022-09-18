@@ -7,6 +7,7 @@ __all__ = ['Annotation', 'Keypoint', 'BoundingBox']
 from abc import ABC, abstractmethod, abstractproperty
 
 class Annotation(ABC):
+    "Abstract class that represents a Box21 Annotation"
     def __init__(self, 
                  asset_id: int, 
                  id: int,
@@ -25,6 +26,7 @@ class Annotation(ABC):
 
 # %% ../03_annotation.ipynb 7
 class Keypoint(Annotation):
+    "Represents a Box21 Keypoint Annotation"
     def __init__(self,
                  asset_id: int, 
                  id: int,
@@ -46,6 +48,7 @@ class Keypoint(Annotation):
 
 # %% ../03_annotation.ipynb 9
 class BoundingBox(Annotation):
+    "Represents a Box21 BoundingBox Annotation"
     def __init__(self,
                  asset_id: int, 
                  id: int,

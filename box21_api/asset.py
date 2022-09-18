@@ -26,6 +26,9 @@ class Asset:
         self.project_id = project_id
         self.unclear = unclear
         self.validated = validated
+        
+    def __repr__(self):
+        return f"Asset({self.meta})"
 
 # %% ../02_asset.ipynb 4
 class Asset(Asset):

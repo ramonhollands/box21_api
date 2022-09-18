@@ -57,7 +57,7 @@ class Box21Api(Box21Api):
 
         return [Asset.from_json(asset_json) for asset_json in asset_jsons]
 
-# %% ../01_api.ipynb 13
+# %% ../01_api.ipynb 10
 from PIL import Image
 import io
 
@@ -73,7 +73,7 @@ class Box21Api(Box21Api):
 
         return Image.open(io.BytesIO(response.content))
 
-# %% ../01_api.ipynb 17
+# %% ../01_api.ipynb 14
 from PIL import Image
 import io, json
 from .annotation import Annotation, BoundingBox, Keypoint
