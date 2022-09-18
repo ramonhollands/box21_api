@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['Asset']
 
-# %% ../02_asset.ipynb 3
+# %% ../02_asset.ipynb 4
 class Asset:
     def __init__(self, 
                  deleted: str, 
@@ -30,7 +30,7 @@ class Asset:
     def __repr__(self):
         return f"Asset({self.meta})"
 
-# %% ../02_asset.ipynb 4
+# %% ../02_asset.ipynb 5
 class Asset(Asset):
     @classmethod
     def from_json(cls, json_dict):
