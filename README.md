@@ -14,10 +14,4 @@ pip install box21_api
 
 ## How to use
 
-Fill me in please! Don’t forget code examples:
-
-``` python
-1+1
-```
-
-    2
+See https://ramonhollands.github.io/box21_api/

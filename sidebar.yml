@@ -1,0 +1,7 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - 01_api.ipynb
+      - 02_asset.ipynb
+      - 03_annotation.ipynb
