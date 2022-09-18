@@ -149,4 +149,6 @@ checklink/cookies.txt
 
 # Quarto
 .quarto
+
 token
+.env
