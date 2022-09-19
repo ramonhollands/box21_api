@@ -111,3 +111,28 @@ class Box21Api(Box21Api):
                 
 
         return annotations
+
+# %% ../01_api.ipynb 18
+class Box21Api(Box21Api):
+    def update_asset_meta(self, asset_id: int, key: str, value: str) -> [Annotation]:
+        self.token = self.get_token()
+        url = '/api/asset/meta/update-value'
+        payload = {
+            "asset_id": asset_id,
+            "key": key,
+            "value": value
+        }
+        response = self.post(url, payload)
+        
+        return Asset.from_json(response.json())
+    
+    def delete_asset_meta_key(self, asset_id: int, key: str) -> [Annotation]:
+        self.token = self.get_token()
+        url = '/api/asset/meta/delete-key'
+        payload = {
+            "asset_id": asset_id,
+            "key": key
+        }
+        response = self.post(url, payload)
+        
+        return Asset.from_json(response.json())
