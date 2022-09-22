@@ -171,6 +171,39 @@ class Box21Api(Box21Api):
         
         return labels
 
+# %% ../01_api.ipynb 29
+class Box21Api(Box21Api):
+    def get_label_annotations(self, label: Label) -> [Annotation]:
+        self.token = self.get_token()
+        url = '/api/label/annotations'
+        payload = {
+            "label_id": label.id
+        }
+        response = self.post(url, payload)
+        
+        annotations = []
+        
+        for annotation_json in response.json():
+            
+            asset_id = annotation_json['asset_id']
+            annotation_id = annotation_json['id']
+            certainty = annotation_json['certainty']
+            label_id = annotation_json['label_id']
+            label_name = annotation_json['relationships']['label']['name']
+            project_id = annotation_json['project_id']
+            validated = annotation_json['validated']
+            coords = json.loads(annotation_json['coords'])
+            
+            if annotation_json['type'] == 1:
+                x, y, w, h = coords
+                annotations.append(
+                    BoundingBox(asset_id, annotation_id, certainty, label_id, label_name, project_id, validated, x, y, w, h))
+            else:
+                x, y = coords
+                annotations.append(
+                    Keypoint(asset_id, annotation_id, certainty, label_id, label_name, project_id, validated, x, y))
+        return annotations
+
 # %% ../01_api.ipynb 32
 from pathlib import Path
 
