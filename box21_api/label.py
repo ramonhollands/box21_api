@@ -7,7 +7,7 @@ __all__ = ['Label']
 from abc import ABC, abstractmethod, abstractproperty
 
 class Label(ABC):
-    "Abstract class that represents a Box21 Annotation"
+    "Class that represents a Box21 Label"
     def __init__(self, 
                  id: int,
                  name: float,

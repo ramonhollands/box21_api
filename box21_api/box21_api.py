@@ -16,11 +16,14 @@ class Box21Api:
         self.project_id = project_id
         self.token = self.get_token()
         
-    def post(self, url, payload):
+    def post(self, url, payload, files=None):
         self.token = self.get_token()
         session = requests.Session()
         session.headers.update({'x-access-token': self.token})
-        response = session.post(self.host + ':' + str(self.port) + url, data=payload)
+        if files:
+            response = session.post(self.host + ':' + str(self.port) + url, data=payload, files=files)
+        else:
+            response = session.post(self.host + ':' + str(self.port) + url, data=payload)
         return response
     
     def get(self, url, payload=None):
@@ -56,6 +59,12 @@ class Box21Api(Box21Api):
         asset_jsons = response.json()
 
         return [Asset.from_json(asset_json) for asset_json in asset_jsons]
+    
+    def get_asset(self, asset_id: int) -> Asset:
+        url = '/api/asset'
+        response = self.post(url, {'asset_id': asset_id})
+        asset_json = response.json()    
+        return Asset.from_json(asset_json)
 
 # %% ../01_api.ipynb 12
 from PIL import Image
@@ -141,7 +150,7 @@ class Box21Api(Box21Api):
 from .label import Label
 
 class Box21Api(Box21Api):
-    def get_labels(self) -> [Annotation]:
+    def get_labels(self) -> [Label]:
         self.token = self.get_token()
         url = '/api/labels'
         payload = {
@@ -161,3 +170,31 @@ class Box21Api(Box21Api):
                 ))
         
         return labels
+
+# %% ../01_api.ipynb 32
+from pathlib import Path
+
+class Box21Api(Box21Api):
+    def add_asset(self, file_path: Path, meta) -> [Asset]:
+        
+        if not isinstance(meta, dict):
+            return 'meta argument should be a python dictionary'
+        
+        self.token = self.get_token()
+        url = '/api/assets/add'
+        payload = {
+            'meta': json.dumps(meta),
+            'filename': file_path.name
+        }
+        files = {'file': open(file_path, 'rb')}
+        response = self.post(url, payload, files=files)
+        print(response.text)
+        
+        return Asset.from_json(response.json())
+    
+    def delete_assets(self, asset_ids: [int]):
+        url = '/api/assets/delete'
+        payload = {
+            'asset_ids': json.dumps(asset_ids)
+        }
+        response = self.post(url, payload)
