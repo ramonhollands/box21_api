@@ -57,7 +57,7 @@ class Box21Api(Box21Api):
 
         return [Asset.from_json(asset_json) for asset_json in asset_jsons]
 
-# %% ../01_api.ipynb 10
+# %% ../01_api.ipynb 12
 from PIL import Image
 import io
 
@@ -73,7 +73,7 @@ class Box21Api(Box21Api):
 
         return Image.open(io.BytesIO(response.content))
 
-# %% ../01_api.ipynb 14
+# %% ../01_api.ipynb 16
 from PIL import Image
 import io, json
 from .annotation import Annotation, BoundingBox, Keypoint
@@ -112,7 +112,7 @@ class Box21Api(Box21Api):
 
         return annotations
 
-# %% ../01_api.ipynb 18
+# %% ../01_api.ipynb 20
 class Box21Api(Box21Api):
     def update_asset_meta(self, asset_id: int, key: str, value: str) -> [Annotation]:
         self.token = self.get_token()
@@ -136,3 +136,28 @@ class Box21Api(Box21Api):
         response = self.post(url, payload)
         
         return Asset.from_json(response.json())
+
+# %% ../01_api.ipynb 26
+from .label import Label
+
+class Box21Api(Box21Api):
+    def get_labels(self) -> [Annotation]:
+        self.token = self.get_token()
+        url = '/api/labels'
+        payload = {
+            "project_id": self.project_id
+        }
+        response = self.post(url, payload)
+        
+        labels = []
+        for label_json in response.json():
+            labels.append(
+                Label(
+                    id=label_json['id'],
+                    name=label_json['name'],
+                    parent_id=label_json['parent_id'],
+                    project_id=label_json['project_id'],
+                    type=label_json['type']
+                ))
+        
+        return labels
