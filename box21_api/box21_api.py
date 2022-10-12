@@ -206,18 +206,44 @@ class Box21Api(Box21Api):
 
 # %% ../01_api.ipynb 32
 from pathlib import Path
+from .annotation import Annotation
+from .annotation import BoundingBox
+from .annotation import Keypoint
 
 class Box21Api(Box21Api):
-    def add_asset(self, file_path: Path, meta) -> [Asset]:
+    def add_asset(self, file_path: Path, meta, annotations: [Annotation]= []) -> [Asset]:
         
         if not isinstance(meta, dict):
             return 'meta argument should be a python dictionary'
+        
+        bounding_boxes = []
+        keypoints = []
+        for annotation in annotations:
+            if isinstance(annotation, BoundingBox):
+                if annotation.x > 1:
+                    return 'Incorrect coordinates, should be between 0 and 1'
+                bounding_boxes.append({
+                    'normalized_xywh': [annotation.x, annotation.y, annotation.width, annotation.height],
+                    'label': annotation.label_name,
+                    'confidence': annotation.certainty
+                })
+            elif isinstance(annotation, Keypoint):
+                if annotation.x > 1:
+                    return 'Incorrect coordinates, should be between 0 and 1'
+                keypoints.append({
+                    'normalized_xywh': [annotation.x, annotation.y],
+                    'label': annotation.label_name,
+                    'confidence': annotation.certainty
+                })
+            
         
         self.token = self.get_token()
         url = '/api/assets/add'
         payload = {
             'meta': json.dumps(meta),
-            'filename': file_path.name
+            'filename': file_path.name,
+            'bounding_boxes': json.dumps(bounding_boxes),
+            'keypoints': json.dumps(keypoints)
         }
         files = {'file': open(file_path, 'rb')}
         response = self.post(url, payload, files=files)
