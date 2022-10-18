@@ -3,6 +3,9 @@
 # %% auto 0
 __all__ = ['Box21Api']
 
+# %% ../01_api.ipynb 4
+from fastcore.utils import *
+
 # %% ../01_api.ipynb 5
 import requests
 
