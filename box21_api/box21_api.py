@@ -209,7 +209,7 @@ def get_label_annotations(self:Box21Api, label: Label) -> [Annotation]:
                 Keypoint(asset_id, annotation_id, certainty, label_id, label_name, project_id, validated, x, y))
     return annotations
 
-# %% ../01_api.ipynb 32
+# %% ../01_api.ipynb 33
 from pathlib import Path
 from .annotation import Annotation
 from .annotation import BoundingBox
@@ -248,7 +248,8 @@ def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [
         'meta': json.dumps(meta),
         'filename': file_path.name,
         'bounding_boxes': json.dumps(bounding_boxes),
-        'keypoints': json.dumps(keypoints)
+        'keypoints': json.dumps(keypoints),
+        'project_id': self.project_id
     }
     files = {'file': open(file_path, 'rb')}
     response = self.post(url, payload, files=files)
@@ -261,5 +262,19 @@ def delete_assets(self:Box21Api, asset_ids: [int]):
     url = '/api/assets/delete'
     payload = {
         'asset_ids': json.dumps(asset_ids)
+    }
+    response = self.post(url, payload)
+
+# %% ../01_api.ipynb 41
+from .job import Job
+@patch
+def update_job(self:Box21Api, job_id, processing=None, processed=None, progress=None):
+    url = '/api/update-job'
+    payload = {
+        'job_id': job_id,
+        'processing': processing,
+        'processed': processed,
+        'progress': progress
+        
     }
     response = self.post(url, payload)

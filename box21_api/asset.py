@@ -3,19 +3,24 @@
 # %% auto 0
 __all__ = ['Asset']
 
-# %% ../02_asset.ipynb 4
+# %% ../02_asset.ipynb 2
+from fastcore.utils import *
+
+# %% ../02_asset.ipynb 5
 class Asset:
     def __init__(self, 
-                 deleted: str, 
-                 id: int,
-                 in_validation_set: bool,
-                 liked: bool,
-                 meta: str,
-                 original_category: str,
-                 path: str,
-                 project_id: int,
-                 unclear: bool,
-                 validated: bool):
+                 deleted: str, # deleted
+                 id: int, # id
+                 in_validation_set: bool, # whether the asset is in the validation set
+                 liked: bool, # whether the asset is liked in Box21
+                 meta: str, # json dict with key value pairs
+                 original_category: str, # optional category
+                 path: str, # box21 asset path
+                 project_id: int, # box21 asset project_id
+                 unclear:bool, # whether the asset is marked as unclear
+                 validated: bool # whether the asset is marked as validated
+                ):
+        "Create a new asset, including the following parameters."
         self.deleted = deleted
         self.id = id
         self.in_validation_set = in_validation_set
@@ -29,9 +34,7 @@ class Asset:
         
     def __repr__(self):
         return f"Asset({self.meta})"
-
-# %% ../02_asset.ipynb 5
-class Asset(Asset):
+    
     @classmethod
     def from_json(cls, json_dict):
         asset = cls(
@@ -47,3 +50,4 @@ class Asset(Asset):
             json_dict['validated'],
         )
         return asset
+    "Draw `n` cards."

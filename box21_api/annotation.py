@@ -9,13 +9,14 @@ from abc import ABC, abstractmethod, abstractproperty
 class Annotation(ABC):
     "Abstract class that represents a Box21 Annotation"
     def __init__(self, 
-                 asset_id: int, 
-                 id: int,
-                 certainty: float,
-                 label_id: int,
-                 label_name: str,
-                 project_id: int,
-                 validated: bool):
+                 asset_id: int, # related asset id in Box21
+                 id: int, # unique id in Box21
+                 certainty: float, # certainty of annotation
+                 label_id: int, # related label id in Box21
+                 label_name: str, # label name
+                 project_id: int, # related project id in Box21
+                 validated: bool # whether the annotation is validated
+                ): 
         self.asset_id = asset_id
         self.id = id
         self.certainty = certainty
