@@ -255,7 +255,7 @@ def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [
     }
     files = {'file': open(file_path, 'rb')}
     response = self.post(url, payload, files=files)
-    print(response.text)
+    #print(response.text)
 
     return Asset.from_json(response.json())
 
