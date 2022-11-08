@@ -216,7 +216,7 @@ from .annotation import BoundingBox
 from .annotation import Keypoint
 
 @patch
-def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= []) -> [Asset]:
+def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [], validated=False, in_validation_set=False) -> [Asset]:
 
     if not isinstance(meta, dict):
         return 'meta argument should be a python dictionary'
@@ -246,6 +246,8 @@ def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [
     url = '/api/assets/add'
     payload = {
         'meta': json.dumps(meta),
+        'validated': validated,
+        'in_validation_set': in_validation_set,
         'filename': file_path.name,
         'bounding_boxes': json.dumps(bounding_boxes),
         'keypoints': json.dumps(keypoints),
