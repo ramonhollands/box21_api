@@ -1,0 +1,106 @@
+[
+  {
+    "objectID": "export.html",
+    "href": "export.html",
+    "title": "Export",
+    "section": "",
+    "text": "Export Box21 data\n\nsource\n\nexport_assets\n\n export_assets (assets:List[box21_api.asset.Asset],\n                api:box21_api.box21_api.Box21Api)\n\n\nsource\n\n\nexport_asset\n\n export_asset (asset:box21_api.asset.Asset,\n               api:box21_api.box21_api.Box21Api)",
+    "crumbs": [
+      "Export"
+    ]
+  },
+  {
+    "objectID": "label.html",
+    "href": "label.html",
+    "title": "Label",
+    "section": "",
+    "text": "An asset can have different annotations, eg bounding box and keypoint\n\nsource\n\nBox21Label\n\n Box21Label (id:int, name:float, parent_id:int, project_id:int, type:int)\n\nClass that represents a Box21 Label\nBox21 currently supports the following types: - 1: bounding box - 2: keypoint\nLabels can be organized hierarchical. This is defined by a parent_id refering to the parent Label",
+    "crumbs": [
+      "Label"
+    ]
+  },
+  {
+    "objectID": "annotation.html",
+    "href": "annotation.html",
+    "title": "Annotation",
+    "section": "",
+    "text": "An asset can have different annotations, eg bounding box and keypoint\n\nsource\n\nBox21Annotation\n\n Box21Annotation (asset_id:int, id:int, certainty:float, label_id:int,\n                  project_id:int, validated:bool)\n\nAbstract class that represents a Box21 Annotation\n\n\n\n\nType\nDetails\n\n\n\n\nasset_id\nint\nrelated asset id in Box21\n\n\nid\nint\nunique id in Box21\n\n\ncertainty\nfloat\ncertainty of annotation\n\n\nlabel_id\nint\nrelated label id in Box21\n\n\nproject_id\nint\nrelated project id in Box21\n\n\nvalidated\nbool\nwhether the annotation is validated\n\n\n\n\nsource\n\n\nAnnotation\n\n Annotation (label_name:str, certainty:float)\n\nAbstract class that represents an Annotation\n\n\n\n\nType\nDetails\n\n\n\n\nlabel_name\nstr\nlabel name\n\n\ncertainty\nfloat\ncertainty of annotation\n\n\n\nBox21 currently supports the following annotations\n\n\nKeypoint\n\nsource\n\n\nKeypoint\n\n Keypoint (label_name:str, certainty:float, x:float, y:float)\n\nRepresents a Keypoint Annotation\n\nsource\n\n\nBox21Keypoint\n\n Box21Keypoint (asset_id:int, id:int, certainty:float, label_id:int,\n                project_id:int, validated:bool)\n\nRepresents a Box21 Keypoint Annotation\n\n\nBoundingBox\n\nsource\n\n\nBox21BoundingBox\n\n Box21BoundingBox (asset_id:int, id:int, certainty:float, label_id:int,\n                   project_id:int, validated:bool, x:float, y:float,\n                   width:float, height:float)\n\nRepresents a Box21 BoundingBox Annotation\n\nsource\n\n\nBoundingBox\n\n BoundingBox (label_name:str, certainty:float, x:float, y:float,\n              width:float, height:float)\n\nRepresents a BoundingBox Annotation",
+    "crumbs": [
+      "Annotation"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "box21_api",
+    "section": "",
+    "text": "from box21_api.core import *\nA python package for interacting with your Box21 via the api",
+    "crumbs": [
+      "box21_api"
+    ]
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "box21_api",
+    "section": "Install",
+    "text": "Install\npip install box21_api",
+    "crumbs": [
+      "box21_api"
+    ]
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "box21_api",
+    "section": "How to use",
+    "text": "How to use\n\nfrom box21_api.box21_api import Box21Api\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\n\n\nlabels = box21_api.get_labels()\nprint('Number of labels retrieved', len(labels))\nprint('First label', labels[0])\n\nNumber of labels retrieved 2\nFirst label Label(('Bounding box', 'Chital', 1))\n\n\n\nannotations = box21_api.get_label_annotations(labels[0])\nprint('Number of annotations retrieved', len(annotations))\nprint('First annotation', annotations[0])\n\nNumber of annotations retrieved 2\nFirst annotation BoundingBox(Chital, (0.1641, 0.5291, 0.2766, 0.3381))\n\n\n\nfirst_annotation = annotations[0]\npil_image = box21_api.download_asset(first_annotation.asset_id)\npil_image\n\n\n\n\n\n\n\n\nSee more examples on: https://ramonhollands.github.io/box21_api/",
+    "crumbs": [
+      "box21_api"
+    ]
+  },
+  {
+    "objectID": "CHANGELOG.html",
+    "href": "CHANGELOG.html",
+    "title": "Release notes",
+    "section": "",
+    "text": "Initial release"
+  },
+  {
+    "objectID": "CHANGELOG.html#section",
+    "href": "CHANGELOG.html#section",
+    "title": "Release notes",
+    "section": "",
+    "text": "Initial release"
+  },
+  {
+    "objectID": "job.html",
+    "href": "job.html",
+    "title": "Job",
+    "section": "",
+    "text": "Box21 uses jobs to handle large tasks\n\nsource\n\nJob\n\n Job (id:int, progress:int, processed:int, description:int,\n      created_at:str, parent_id:int, project_id:int, deleted_at:str)\n\nClass that represents a Box21 Job\n\n\n\n\nType\nDetails\n\n\n\n\nid\nint\n\n\n\nprogress\nint\npercentage\n\n\nprocessed\nint\n1=true, 0=false\n\n\ndescription\nint\n\n\n\ncreated_at\nstr\n\n\n\nparent_id\nint\n\n\n\nproject_id\nint\n\n\n\ndeleted_at\nstr",
+    "crumbs": [
+      "Job"
+    ]
+  },
+  {
+    "objectID": "asset.html",
+    "href": "asset.html",
+    "title": "Asset",
+    "section": "",
+    "text": "An asset contains an image, meta information like validated or in_validation_set and optional a set op annotations (eg points and bounding boxes)\n\nsource\n\nAsset\n\n Asset (deleted:str, id:int, in_validation_set:bool, liked:bool, meta:str,\n        original_category:str, path:str, project_id:int, unclear:bool,\n        validated:bool)\n\nCreate a new asset, including the following parameters.\n\n\n\n\n\n\n\n\n\nType\nDetails\n\n\n\n\ndeleted\nstr\ndeleted\n\n\nid\nint\nid\n\n\nin_validation_set\nbool\nwhether the asset is in the validation set\n\n\nliked\nbool\nwhether the asset is liked in Box21\n\n\nmeta\nstr\njson dict with key value pairs\n\n\noriginal_category\nstr\noptional category\n\n\npath\nstr\nbox21 asset path\n\n\nproject_id\nint\nbox21 asset project_id\n\n\nunclear\nbool\nwhether the asset is marked as unclear\n\n\nvalidated\nbool\nwhether the asset is marked as validated\n\n\n\n\njson_dict = {'deleted': None, 'filename': '768a1300-79f1-4261-b7cc-0ff44669008b_bricks_oblique_4_10.jpg', 'id': 21, 'in_validation_set': False, 'liked': False, 'meta': '{\"filename\": \"768a1300-79f1-4261-b7cc-0ff44669008b_bricks_oblique_4_10.jpg\", \"import\": \"true\", \"description\": \"Movies\"}', 'original_category': '', 'path': '768a1300-79f1-4261-b7cc-0ff44669008b_bricks_oblique_4_10.jpg', 'project_id': 3, 'unclear': False, 'validated': 'true'}\nasset = Asset.from_json(json_dict)\nprint(asset.id)\n\n21",
+    "crumbs": [
+      "Asset"
+    ]
+  },
+  {
+    "objectID": "api.html",
+    "href": "api.html",
+    "title": "Box21 api",
+    "section": "",
+    "text": "import os\nfrom dotenv import load_dotenv\n\n\nload_dotenv()\nAPI_USERNAME = os.environ.get('EMAIL')\nAPI_PASSWORD = os.environ.get('PASSWORD')\nAPI_PROJECT_ID = os.environ.get('PROJECT_ID')\n\n\nsource\n\nBox21Api\n\n Box21Api (email:str, password:str, host:str, port:int, project_id:int)\n\nBox21 Api class\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\n\n\n\nRetrieve assets\n\nsource\n\n\nBox21Api.get_asset\n\n Box21Api.get_asset (asset_id:int)\n\n\nsource\n\n\nBox21Api.get_assets\n\n Box21Api.get_assets (offset:int=0, limit:int=None)\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nassets = box21_api.get_assets(limit=15)\nprint('Number of assets retrieved', len(assets))\nfirst_asset = assets[0]\nprint(first_asset)\n\n&lt;Response [200]&gt;\nNumber of assets retrieved 1\nAsset({\"filename\": \"6d0a5af1-720e-47ee-86e5-bc0c15fe2015_chitals.png\", \"import\": \"true\", \"description\": \"Chital\"})\n\n\n\nfirst_asset = box21_api.get_asset(first_asset.id)\nprint(first_asset)\n\nAsset({\"filename\": \"6d0a5af1-720e-47ee-86e5-bc0c15fe2015_chitals.png\", \"import\": \"true\", \"description\": \"Chital\"})\n\n\n\nsource\n\n\nBox21Api.download_asset\n\n Box21Api.download_asset (asset_id:int)\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nassets = box21_api.get_assets(limit=10)\nimage = box21_api.download_asset(assets[0].id)\n\n&lt;Response [200]&gt;\n\n\n\nimage\n\n\n\n\n\n\n\n\n\n\nRetrieve annotations\n\nsource\n\n\nBox21Api.get_annotations\n\n Box21Api.get_annotations (asset_id:int)\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nannotations = box21_api.get_annotations(assets[0].id)\nprint(len(annotations))\nprint(annotations[0].project_id)\n\n2\n1\n\n\n\n\nUpdate asset meta\nAn asset has meta which is a list of key value pairs. You can add, update and delete them via the api\n\nsource\n\n\nBox21Api.delete_asset_meta_key\n\n Box21Api.delete_asset_meta_key (asset_id:int, key:str)\n\n\nsource\n\n\nBox21Api.update_asset_meta\n\n Box21Api.update_asset_meta (asset_id:int, key:str, value:str)\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nupdated_asset = box21_api.update_asset_meta(assets[0].id, 'some_new_key', 'some new value')\n\nprint(json.loads(updated_asset.meta))\n\n{'filename': '6d0a5af1-720e-47ee-86e5-bc0c15fe2015_chitals.png', 'import': 'true', 'description': 'Chital', 'some_new_key': 'some new value'}\n\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nupdated_asset = box21_api.delete_asset_meta_key(assets[0].id, 'some_new_key')\n\nprint(json.loads(updated_asset.meta))\n\n{'filename': '6d0a5af1-720e-47ee-86e5-bc0c15fe2015_chitals.png', 'import': 'true', 'description': 'Chital'}\n\n\n\n\nGet labels\nGet all labels for a specific project\n\nsource\n\n\nBox21Api.get_labels\n\n Box21Api.get_labels ()\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nlabels = box21_api.get_labels()\nprint(labels[0])\n\nLabel(('Bounding box', 'Chital', 1))\n\n\n\n\nGet all annotations for a label:\n\nsource\n\n\nBox21Api.get_label_annotations\n\n Box21Api.get_label_annotations (label:box21_api.label.Box21Label)\n\n\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nannotations = box21_api.get_label_annotations(labels[0])\nprint(len(annotations))\nfor annotation in annotations:\n    print(annotation)\n\n2\nBoundingBox(1, (0.525, 0.3911, 0.3484, 0.3532))\nBoundingBox(1, (0.1641, 0.5291, 0.2766, 0.3381))\n\n\n\n\nAdding and deleting assets\n\nsource\n\n\nBox21Api.delete_assets\n\n Box21Api.delete_assets (asset_ids:[&lt;class'int'&gt;])\n\n\nsource\n\n\nBox21Api.add_asset\n\n Box21Api.add_asset (file_path:pathlib.Path, meta,\n                     annotations:[&lt;class'box21_api.annotation.Annotation'&gt;\n                     ]=[], validated=False, in_validation_set=False)\n\n\nimage.save('example.png')\nfile_path = Path('example.png')\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nasset = box21_api.add_asset(file_path, {'testing': True})\n\n\nprint('Number of assets before delete', len(box21_api.get_assets()))\nbox21_api.delete_assets([asset.id])\nprint('Number of assets after delete', len(box21_api.get_assets()))\n\n&lt;Response [200]&gt;\nNumber of assets before delete 2\n&lt;Response [200]&gt;\nNumber of assets after delete 1\n\n\nExample adding a bounding box\n\nbounding_box = BoundingBox(\n    certainty=0.9,\n    label_name='Testing adding label',\n    x= 0.0,\n    y= 0.3,\n    width= 0.1,\n    height= 0.1\n)\n\nimage.save('example.png')\nfile_path = Path('example.png')\nbox21_api = Box21Api(API_USERNAME, API_PASSWORD, 'https://box21.ai', 443, API_PROJECT_ID)\nasset = box21_api.add_asset(file_path, {'testing': True}, annotations=[bounding_box])\nprint(asset)\n\nAsset({\"testing\": true})\n\n\n\nasset_annotations = box21_api.get_annotations(asset.id)\nasset_annotations\n\n[BoundingBox(130, (0.0, 0.3, 0.1, 0.1))]\n\n\n\nprint('Number of assets before delete', len(box21_api.get_assets()))\nbox21_api.delete_assets([asset.id])\nprint('Number of assets after delete', len(box21_api.get_assets()))\n\n&lt;Response [200]&gt;\nNumber of assets before delete 2\n&lt;Response [200]&gt;\nNumber of assets after delete 1\n\n\n\n\nUpdating jobs\n\nsource\n\n\nBox21Api.update_job\n\n Box21Api.update_job (job_id, processing=None, processed=None,\n                      progress=None)",
+    "crumbs": [
+      "Box21 api"
+    ]
+  }
+]
