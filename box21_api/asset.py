@@ -6,9 +6,12 @@
 __all__ = ['Asset']
 
 # %% ../02_asset.ipynb 2
-from fastcore.utils import *
+from fastcore.utils import * # type: ignore
 
-# %% ../02_asset.ipynb 5
+# %% ../02_asset.ipynb 4
+from typing import Any, Dict
+
+
 class Asset:
     def __init__(self, 
                  deleted: str, # deleted
@@ -38,7 +41,7 @@ class Asset:
         return f"Asset({self.meta})"
     
     @classmethod
-    def from_json(cls, json_dict):
+    def from_json(cls, json_dict : Dict[str, Any]) -> 'Asset':
         asset = cls(
             json_dict['deleted'],
             json_dict['id'],

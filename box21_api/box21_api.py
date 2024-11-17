@@ -6,9 +6,10 @@
 __all__ = ['Box21Api']
 
 # %% ../01_api.ipynb 4
-from fastcore.utils import *
+from fastcore.utils import * # type: ignore
 
 # %% ../01_api.ipynb 5
+from typing import Any
 import requests
 
 class Box21Api:
@@ -21,7 +22,7 @@ class Box21Api:
         self.project_id = project_id
         self.token = self.get_token()
         
-    def post(self, url, payload, files=None):
+    def post(self, url :str , payload : Dict[str,Any], files : Optional[Dict[str, str]] = None):
         self.token = self.get_token()
         session = requests.Session()
         session.headers.update({'x-access-token': self.token})
@@ -31,7 +32,7 @@ class Box21Api:
             response = session.post(self.host + ':' + str(self.port) + url, data=payload)
         return response
     
-    def get(self, url, payload=None):
+    def get(self, url : str, payload : Optional[Dict[str,str]]=None):
         self.token = self.get_token()
         session = requests.Session()
         session.headers.update({'x-access-token': self.token})
@@ -53,16 +54,19 @@ class Box21Api:
 from .asset import Asset
 
 @patch
-def get_assets(self:Box21Api, offset:int=0, limit:int=None) -> [Asset]:
-    payload = {
-        "offset": offset,
-        "limit": limit,
-        "project_id": self.project_id
+def get_assets(self:Box21Api, offset:int=0, limit: Optional[int]=None) -> List[Asset]:
+
+    print(self.project_id)
+    payload : Dict[str, str] = {
+        "offset": str(offset),
+        "limit": limit, # type: ignore
+        "project_id": str(self.project_id)
     }
     url = '/api/v2/assets'
     response = self.post(url, payload)
+
+    print(response.text)
     
-    print(response)
     asset_jsons = response.json()
     
 
@@ -80,7 +84,7 @@ from PIL import Image
 import io
 
 @patch
-def download_asset(self:Box21Api, asset_id: int) -> Image:
+def download_asset(self:Box21Api, asset_id: int) -> Image.Image:
     self.token = self.get_token()
     url = '/api/asset/download'
     payload = {
@@ -91,13 +95,72 @@ def download_asset(self:Box21Api, asset_id: int) -> Image:
 
     return Image.open(io.BytesIO(response.content))
 
+# %% ../01_api.ipynb 14
+import json
+
+@patch
+def get_assets_with_filters(self:Box21Api, filters: List[Dict[str, str]]) -> List[Asset]:
+    api_endpoint = '/api/filter-assets'
+        
+    form_params : Dict[str, Any] = {
+        'filters': json.dumps(filters),
+        'project_id': self.project_id,
+        'limit': 100000
+    }
+
+    response = self.post(
+        api_endpoint,
+        form_params
+    )
+        
+    response_data = response.json()
+    items = response_data.get('items', [])
+    asset_ids = [item['id'] for item in items]
+
+    # Second request to get asset details
+    api_endpoint = '/api/v2/assets'
+    form_params = {
+        'asset_ids': json.dumps(asset_ids),
+        'project_id': self.project_id,
+        'limit': len(asset_ids)
+    }
+
+    response = self.post(
+        api_endpoint,
+        form_params
+    )
+
+    return [Asset.from_json(asset_json) for asset_json in response.json()]
+
 # %% ../01_api.ipynb 15
-from PIL import Image
-import io, json
+@patch
+def get_assets_containing_meta(self:Box21Api, meta: str, in_validation_set:bool=False) -> List[Asset]:
+    filters : List[Dict[str, Any]] = [{"type":7,"value":meta}]
+
+    if in_validation_set:
+        filters.append({"type": 13, "value": 'Yes'})
+    else:
+        filters.append({"type": 13, "value": 'No'})   
+    
+    return self.get_assets_with_filters(filters)
+
+@patch
+def get_assets_not_containing_meta(self:Box21Api, meta: str, in_validation_set:bool=False) -> List[Asset]:
+    filters : List[Dict[str, Any]]  = [{"type":8,"value":meta}]
+
+    if in_validation_set:
+        filters.append({"type": 13, "value": 'Yes'})
+    else:
+        filters.append({"type": 13, "value": 'No'})   
+    
+    return self.get_assets_with_filters(filters)
+
+# %% ../01_api.ipynb 18
+import json
 from .annotation import Box21Annotation, Box21BoundingBox, Box21Keypoint
 
 @patch
-def get_annotations(self:Box21Api, asset_id: int) -> [Box21Annotation]:
+def get_annotations(self:Box21Api, asset_id: int) -> List[Box21Annotation]:
     self.token = self.get_token()
     url = '/api/asset/annotations'
     payload = {
@@ -105,14 +168,13 @@ def get_annotations(self:Box21Api, asset_id: int) -> [Box21Annotation]:
     }
     response = self.post(url, payload)
 
-    annotations = []
+    annotations : List[Box21Annotation] = []
 
     for annotation_json in response.json():
         asset_id = annotation_json['asset_id']
         annotation_id = annotation_json['id']
         certainty = annotation_json['certainty']
         label_id = annotation_json['label_id']
-        label_name = annotation_json['relationships']['label']['name']
         project_id = annotation_json['project_id']
         validated = annotation_json['validated']
         coords = json.loads(annotation_json['coords'])
@@ -129,7 +191,7 @@ def get_annotations(self:Box21Api, asset_id: int) -> [Box21Annotation]:
 
     return annotations
 
-# %% ../01_api.ipynb 19
+# %% ../01_api.ipynb 23
 @patch
 def update_asset_meta(self:Box21Api, asset_id: int, key: str, value: str) -> [Box21Annotation]:
     self.token = self.get_token()
@@ -155,7 +217,7 @@ def delete_asset_meta_key(self:Box21Api, asset_id: int, key: str) -> [Box21Annot
 
     return Asset.from_json(response.json())
 
-# %% ../01_api.ipynb 25
+# %% ../01_api.ipynb 29
 from .label import Box21Label
 
 @patch
@@ -180,7 +242,7 @@ def get_labels(self:Box21Api) -> [Box21Label]:
 
     return labels
 
-# %% ../01_api.ipynb 28
+# %% ../01_api.ipynb 32
 @patch
 def get_label_annotations(self:Box21Api, label: Box21Label) -> [Box21Annotation]:
     self.token = self.get_token()
@@ -198,7 +260,6 @@ def get_label_annotations(self:Box21Api, label: Box21Label) -> [Box21Annotation]
         annotation_id = annotation_json['id']
         certainty = annotation_json['certainty']
         label_id = annotation_json['label_id']
-        label_name = annotation_json['relationships']['label']['name']
         project_id = annotation_json['project_id']
         validated = annotation_json['validated']
         coords = json.loads(annotation_json['coords'])
@@ -213,20 +274,20 @@ def get_label_annotations(self:Box21Api, label: Box21Label) -> [Box21Annotation]
                 Box21Keypoint(asset_id, annotation_id, certainty, label_id, project_id, validated, x, y))
     return annotations
 
-# %% ../01_api.ipynb 32
+# %% ../01_api.ipynb 35
 from pathlib import Path
 from .annotation import Annotation
 from .annotation import BoundingBox
 from .annotation import Keypoint
 
 @patch
-def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [], validated=False, in_validation_set=False) -> [Asset]:
+def add_asset(self:Box21Api, file_path: Path, meta : Dict[str, Any], annotations: List[Annotation]= [], validated : bool =False, in_validation_set : bool=False, no_duplicate_filename : bool = False) -> List[Asset]:
 
     if not isinstance(meta, dict):
         return 'meta argument should be a python dictionary'
 
-    bounding_boxes = []
-    keypoints = []
+    bounding_boxes : List[BoundingBox] = []
+    keypoints : List[Keypoint] = []
     for annotation in annotations:
         if isinstance(annotation, BoundingBox):
             if annotation.x > 1:
@@ -255,7 +316,8 @@ def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [
         'filename': file_path.name,
         'bounding_boxes': json.dumps(bounding_boxes),
         'keypoints': json.dumps(keypoints),
-        'project_id': self.project_id
+        'project_id': self.project_id,
+        'no_duplicate_filename': no_duplicate_filename
     }
     files = {'file': open(file_path, 'rb')}
     response = self.post(url, payload, files=files)
@@ -264,23 +326,23 @@ def add_asset(self:Box21Api, file_path: Path, meta, annotations: [Annotation]= [
     return Asset.from_json(response.json())
 
 @patch
-def delete_assets(self:Box21Api, asset_ids: [int]):
+def delete_assets(self:Box21Api, asset_ids: List[int]):
     url = '/api/assets/delete'
     payload = {
         'asset_ids': json.dumps(asset_ids)
     }
     response = self.post(url, payload)
+    return response
 
-# %% ../01_api.ipynb 40
-from .job import Job
+# %% ../01_api.ipynb 44
 @patch
-def update_job(self:Box21Api, job_id, processing=None, processed=None, progress=None):
+def update_job(self:Box21Api, job_id : int, processing : Optional[bool] = None, processed : Optional[bool] = None, progress : Optional[int] = None):
     url = '/api/update-job'
-    payload = {
+    payload : Dict[str, Any] = {
         'job_id': job_id,
         'processing': processing,
         'processed': processed,
         'progress': progress
         
     }
-    response = self.post(url, payload)
+    return self.post(url, payload)
