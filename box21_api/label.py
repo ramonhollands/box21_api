@@ -7,6 +7,8 @@ __all__ = ['Box21Label']
 
 # %% ../04_label.ipynb 4
 from abc import ABC, abstractmethod, abstractproperty
+from typing import List
+from .annotation_stat import AnnotationStat
 
 class Box21Label(ABC):
     "Class that represents a Box21 Label"
@@ -15,13 +17,15 @@ class Box21Label(ABC):
                  name: float,
                  parent_id: int,
                  project_id: int,
+                 annotation_stats: List[AnnotationStat],
                  type: int):
         self.id = id
         self.name = name
         self.parent_id = parent_id
         self.project_id = project_id
         self.type = type
-        
+        self.annotation_stats = annotation_stats
+
     def __repr__(self):
         
         type_label = 'Bounding box'

@@ -9,7 +9,9 @@ __all__ = ['Asset']
 from fastcore.utils import * # type: ignore
 
 # %% ../02_asset.ipynb 4
-from typing import Any, Dict
+from typing import Any, Dict, List
+
+from .annotation import Box21Annotation, parse_json_annotation
 
 
 class Asset:
@@ -23,7 +25,8 @@ class Asset:
                  path: str, # box21 asset path
                  project_id: int, # box21 asset project_id
                  unclear:bool, # whether the asset is marked as unclear
-                 validated: bool # whether the asset is marked as validated
+                 validated: bool, # whether the asset is marked as validated
+                 annotations: Optional[List[Box21Annotation]] = None
                 ):
         "Create a new asset, including the following parameters."
         self.deleted = deleted
@@ -36,12 +39,20 @@ class Asset:
         self.project_id = project_id
         self.unclear = unclear
         self.validated = validated
+        self.annotations = annotations
         
     def __repr__(self):
         return f"Asset({self.meta})"
     
     @classmethod
     def from_json(cls, json_dict : Dict[str, Any]) -> 'Asset':
+
+        annotations : List[Box21Annotation] = []
+        if 'relationships' in json_dict:
+            if 'annotations' in json_dict['relationships']:
+                for annotation_json in json_dict['relationships']['annotations']:
+                    annotations.append(parse_json_annotation(annotation_json))
+
         asset = cls(
             json_dict['deleted'],
             json_dict['id'],
@@ -53,6 +64,7 @@ class Asset:
             json_dict['project_id'],
             json_dict['unclear'],
             json_dict['validated'],
+            annotations
         )
         return asset
     "Draw `n` cards."

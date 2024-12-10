@@ -64,8 +64,6 @@ def get_assets(self:Box21Api, offset:int=0, limit: Optional[int]=None) -> List[A
     }
     url = '/api/v2/assets'
     response = self.post(url, payload)
-
-    print(response.text)
     
     asset_jsons = response.json()
     
@@ -95,9 +93,8 @@ def download_asset(self:Box21Api, asset_id: int) -> Image.Image:
 
     return Image.open(io.BytesIO(response.content))
 
-# %% ../01_api.ipynb 14
+# %% ../01_api.ipynb 15
 import json
-
 @patch
 def get_assets_with_filters(self:Box21Api, filters: List[Dict[str, str]]) -> List[Asset]:
     api_endpoint = '/api/filter-assets'
@@ -105,7 +102,8 @@ def get_assets_with_filters(self:Box21Api, filters: List[Dict[str, str]]) -> Lis
     form_params : Dict[str, Any] = {
         'filters': json.dumps(filters),
         'project_id': self.project_id,
-        'limit': 100000
+        'offset': 0,
+        'limit': 100
     }
 
     response = self.post(
@@ -132,32 +130,48 @@ def get_assets_with_filters(self:Box21Api, filters: List[Dict[str, str]]) -> Lis
 
     return [Asset.from_json(asset_json) for asset_json in response.json()]
 
-# %% ../01_api.ipynb 15
 @patch
-def get_assets_containing_meta(self:Box21Api, meta: str, in_validation_set:bool=False) -> List[Asset]:
-    filters : List[Dict[str, Any]] = [{"type":7,"value":meta}]
+def get_assets_containing_meta(self:Box21Api, meta: List[str], in_validation_set:bool=False, validated:Optional[bool]=None) -> List[Asset]:
+    filters : List[Dict[str, Any]] = []
+
+    for m in meta:
+        filters.append({"type":7,"value":m})
 
     if in_validation_set:
         filters.append({"type": 13, "value": 'Yes'})
     else:
         filters.append({"type": 13, "value": 'No'})   
+
+    if validated is True:
+        filters.append({"type": 9, "value": 'Yes'})
+    elif validated is False:
+        filters.append({"type": 9, "value": 'No'})
     
     return self.get_assets_with_filters(filters)
 
 @patch
-def get_assets_not_containing_meta(self:Box21Api, meta: str, in_validation_set:bool=False) -> List[Asset]:
-    filters : List[Dict[str, Any]]  = [{"type":8,"value":meta}]
+def get_assets_not_containing_meta(self:Box21Api, meta: List[str], in_validation_set:bool=False, validated:Optional[bool]=None) -> List[Asset]:
+    filters : List[Dict[str, Any]] = []
+
+    for m in meta:
+        filters.append({"type":8,"value":m})
 
     if in_validation_set:
         filters.append({"type": 13, "value": 'Yes'})
     else:
         filters.append({"type": 13, "value": 'No'})   
+
+    if validated is True:
+        filters.append({"type": 9, "value": 'Yes'})
+    elif validated is False:
+        filters.append({"type": 9, "value": 'No'})
     
     return self.get_assets_with_filters(filters)
 
 # %% ../01_api.ipynb 18
 import json
 from .annotation import Box21Annotation, Box21BoundingBox, Box21Keypoint
+from .annotation import parse_json_annotation
 
 @patch
 def get_annotations(self:Box21Api, asset_id: int) -> List[Box21Annotation]:
@@ -171,23 +185,7 @@ def get_annotations(self:Box21Api, asset_id: int) -> List[Box21Annotation]:
     annotations : List[Box21Annotation] = []
 
     for annotation_json in response.json():
-        asset_id = annotation_json['asset_id']
-        annotation_id = annotation_json['id']
-        certainty = annotation_json['certainty']
-        label_id = annotation_json['label_id']
-        project_id = annotation_json['project_id']
-        validated = annotation_json['validated']
-        coords = json.loads(annotation_json['coords'])
-
-        if annotation_json['type'] == 1:
-            x, y, w, h = coords
-            annotations.append(
-                Box21BoundingBox(asset_id, annotation_id, certainty, label_id, project_id, validated, x, y, w, h))
-        else:
-            x, y = coords
-            annotations.append(
-                Box21Keypoint(asset_id, annotation_id, certainty, label_id, project_id, validated, x, y))
-
+        annotations.append(parse_json_annotation(annotation_json))
 
     return annotations
 
@@ -219,9 +217,11 @@ def delete_asset_meta_key(self:Box21Api, asset_id: int, key: str) -> [Box21Annot
 
 # %% ../01_api.ipynb 29
 from .label import Box21Label
+from typing import List
+from .annotation_stat import AnnotationStat
 
 @patch
-def get_labels(self:Box21Api) -> [Box21Label]:
+def get_labels(self:Box21Api) -> List[Box21Label]:
     self.token = self.get_token()
     url = '/api/labels'
     payload = {
@@ -229,15 +229,23 @@ def get_labels(self:Box21Api) -> [Box21Label]:
     }
     response = self.post(url, payload)
 
-    labels = []
+    labels : List[Box21Label] = []
     for label_json in response.json():
+        annotation_stats : List[AnnotationStat] = []
+
+        for annotation_stat_json in label_json['relationships']['annotation_stats']:
+            annotation_stats.append(
+                AnnotationStat.from_json(annotation_stat_json)
+            )
+
         labels.append(
             Box21Label(
                 id=label_json['id'],
                 name=label_json['name'],
                 parent_id=label_json['parent_id'],
                 project_id=label_json['project_id'],
-                type=label_json['type']
+                type=label_json['type'],
+                annotation_stats=annotation_stats
             ))
 
     return labels
@@ -274,7 +282,7 @@ def get_label_annotations(self:Box21Api, label: Box21Label) -> [Box21Annotation]
                 Box21Keypoint(asset_id, annotation_id, certainty, label_id, project_id, validated, x, y))
     return annotations
 
-# %% ../01_api.ipynb 35
+# %% ../01_api.ipynb 37
 from pathlib import Path
 from .annotation import Annotation
 from .annotation import BoundingBox
@@ -334,7 +342,51 @@ def delete_assets(self:Box21Api, asset_ids: List[int]):
     response = self.post(url, payload)
     return response
 
-# %% ../01_api.ipynb 44
+# %% ../01_api.ipynb 46
+from requests import Response
+
+@patch
+def add_annotation(self:Box21Api, annotation: Annotation, asset: Asset) -> Optional[Response]:
+    # is BoundingBox type
+    if type(annotation) == BoundingBox:
+        url = '/api/assets/boundingbox/add'
+        label_name = annotation.label_name
+        normalized_xywh = [annotation.x, annotation.y, annotation.width, annotation.height]
+        certainty = annotation.certainty
+        payload : Dict[str,Any] = {
+            'asset_id': asset.id,
+            'label_name': label_name,
+            'normalized_xywh': json.dumps(normalized_xywh),
+            'certainty': certainty
+        }
+
+        print('payload', payload)
+        return self.post(url, payload)
+
+    elif type(annotation) == Keypoint:
+        url = '/api/assets/keypoint/add'
+        label_name = annotation.label_name
+        normalized_xy = [annotation.x, annotation.y]
+        certainty = annotation.certainty
+        payload : Dict[str,Any] = {
+            'asset_id': asset.id,
+            'label_name': label_name,
+            'normalized_xywh': json.dumps(normalized_xy),
+            'certainty': certainty
+        }
+        return self.post(url, payload)
+
+# %% ../01_api.ipynb 47
+@patch
+def detete_annotations(self:Box21Api, annotations: List[Box21Annotation]) -> None:
+    url = '/api/annotation/delete'    
+    for annotation in annotations:
+        payload = {
+            'annotation_id': annotation.id
+        }
+        self.post(url, payload)
+
+# %% ../01_api.ipynb 50
 @patch
 def update_job(self:Box21Api, job_id : int, processing : Optional[bool] = None, processed : Optional[bool] = None, progress : Optional[int] = None):
     url = '/api/update-job'
@@ -346,3 +398,15 @@ def update_job(self:Box21Api, job_id : int, processing : Optional[bool] = None, 
         
     }
     return self.post(url, payload)
+
+# %% ../01_api.ipynb 52
+from requests import Response
+
+@patch
+def delete_suggestions(self:Box21Api, asset_id: int) -> Response:
+    url = '/api/asset/discard-all-suggestions'
+    payload = {
+        'asset_id': asset_id
+    }
+    return self.post(url, payload)
+
