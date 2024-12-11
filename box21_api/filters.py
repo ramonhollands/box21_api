@@ -5,7 +5,8 @@
 # %% auto 0
 __all__ = ['get_contains_meta_filter', 'get_in_validation_set_filter', 'get_not_in_validation_set_filter',
            'get_asset_is_validated_filter', 'get_asset_is_not_validated_filter',
-           'get_not_containing_annotation_with_name_filter', 'get_has_suggestions_filter']
+           'get_not_containing_annotation_with_name_filter', 'get_has_suggestions_filter',
+           'get_has_x_suggestions_filter']
 
 # %% ../08_filters.ipynb 2
 from typing import Any, Dict
@@ -30,3 +31,6 @@ def get_not_containing_annotation_with_name_filter(name: str) -> Dict[str, Any]:
 
 def get_has_suggestions_filter() -> Dict[str, Any]:
     return {"type": 31, "value": 'Yes'}
+
+def get_has_x_suggestions_filter(x: int) -> Dict[str, Any]:
+    return {"type": 45, "value": x}
