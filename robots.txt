@@ -1,0 +1,1 @@
+Sitemap: https://ramonhollands.github.io/box21_api/sitemap.xml
