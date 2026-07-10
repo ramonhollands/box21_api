@@ -4,7 +4,7 @@
 __all__ = ['Annotation', 'Box21Annotation', 'Keypoint', 'Box21Keypoint', 'BoundingBox', 'Box21BoundingBox',
            'parse_json_annotation']
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC
 
 class Annotation(ABC):
     "Abstract class that represents an Annotation"

@@ -55,6 +55,9 @@ def get_min_nr_annotations(x: int) -> Dict[str, Any]:
 def get_added_after_filter(x: str) -> Dict[str, Any]:
     return {"type": 38, "value": x}
 
+def get_added_before_filter(x: str) -> Dict[str, Any]:
+    return {"type": 37, "value": x}
+
 def get_min_annotations_confidence_filter(x: float) -> Dict[str, Any]:
     return {"type": 3, "value": x}
 
