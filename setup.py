@@ -1,6 +1,15 @@
-from pkg_resources import parse_version
 import setuptools
-assert parse_version(setuptools.__version__)>=parse_version('36.2')
+
+def _version_tuple(value):
+    parts = []
+    for part in str(value).split('.'):
+        digits = ''.join(ch for ch in part if ch.isdigit())
+        if digits == '':
+            break
+        parts.append(int(digits))
+    return tuple(parts)
+
+assert _version_tuple(setuptools.__version__) >= (36, 2)
 
 # Settings merged from settings.ini
 lib_name = 'box21_api'
