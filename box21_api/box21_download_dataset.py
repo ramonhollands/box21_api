@@ -91,8 +91,14 @@ def _fetch_annotations_for_label(
     in_validation_set: bool,
     additional_filter_sets: Optional[List[List[Dict[str, Any]]]] = None,
     only_valid_assets: bool = True,
+    label_id: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
-    """Call filter-boxes for one label and train/val, return flat list of annotation records."""
+    """Call filter-boxes for one label and train/val, return flat list of annotation records.
+
+    Filter type 27 also returns descendants (Rat, Vulpes under Animal). Like the
+    worker, each record gets the train label (``label_id``/``label_name``) and
+    keeps the annotated label as ``source_label_id``/``source_label_name``.
+    """
     filter_lists = _build_filters(
         label_name, in_validation_set, additional_filter_sets, only_valid_assets
     )
@@ -119,10 +125,16 @@ def _fetch_annotations_for_label(
                 rel = a.get("relationships") or {}
                 asset_json = rel.get("asset") or {}
                 label_json = rel.get("label") or {}
+                source_id = label_json.get("id")
+                train_id = label_id if label_id is not None else source_id
+                is_child = source_id is not None and train_id is not None and int(source_id) != int(train_id)
                 out.append({
+                    "annotation_id": a.get("id"),
                     "asset_id": asset_json.get("id"),
-                    "label_id": label_json.get("id"),
-                    "label_name": label_json.get("name"),
+                    "label_id": train_id,
+                    "label_name": label_name if label_id is not None else label_json.get("name"),
+                    "source_label_id": source_id if is_child else None,
+                    "source_label_name": label_json.get("name") if is_child else None,
                     "label_parent_id": label_json.get("parent_id"),
                     "coords": a.get("coords"),
                     "in_validation_set": asset_json.get("in_validation_set", False),
@@ -231,8 +243,11 @@ def get_annotations_for_train_config(
                 in_validation_set=in_val,
                 additional_filter_sets=filter_sets,
                 only_valid_assets=only_valid_assets,
+                label_id=label.id,
             )
             annotations.extend(anns)
+
+    annotations = _keep_nearest_train_label(annotations)
 
     # skip-fullsize-boxes: worker filters these out when name contains "skip-fullsize-boxes"
     config_name = (train_config.get("name") or "") or ""
@@ -241,6 +256,39 @@ def get_annotations_for_train_config(
         annotations = [a for a in annotations if a.get("coords") != fullsize]
 
     return annotations
+
+
+def _keep_nearest_train_label(annotations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Drop copies of a box that also matched a farther train label.
+
+    With Animal and Rat both in the label set, a Rat box comes back for both.
+    Keep it under the nearest train label: the label itself, then its direct
+    parent, then the lowest label id. Matches box21_ai_worker
+    ``keep_nearest_train_label``; copies under the same train label
+    (overlapping filter sets) are left alone.
+    """
+    def rank(ann: Dict[str, Any]) -> tuple:
+        label_id = int(ann["label_id"])
+        if ann.get("source_label_id") is None:
+            return (0, label_id)
+        parent_id = ann.get("label_parent_id")
+        if parent_id is not None and int(parent_id) == label_id:
+            return (1, label_id)
+        return (2, label_id)
+
+    best: Dict[Any, tuple] = {}
+    for ann in annotations:
+        key = ann.get("annotation_id")
+        if key is None or ann.get("label_id") is None:
+            continue
+        r = rank(ann)
+        if key not in best or r < best[key]:
+            best[key] = r
+    return [
+        ann for ann in annotations
+        if ann.get("annotation_id") not in best
+        or int(ann["label_id"]) == best[ann["annotation_id"]][1]
+    ]
 
 
 def _unique_assets(annotations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

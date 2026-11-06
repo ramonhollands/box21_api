@@ -112,3 +112,48 @@ def test_validation_photos_are_not_limited():
     ]
     kept = apply_train_asset_limits(anns, max_per_label=1, min_per_label=1)
     assert [a["id"] for a in kept] == [1, 4, 5]
+
+
+# --- Child labels under one train label (Animal > Rat, Vulpes) ---
+
+ANIMAL, RAT, VULPES = 500, 501, 502
+
+
+def _child(ann_id, child_id, asset_id, child_name):
+    ann = _ann(ann_id, ANIMAL, asset_id, "Animal")
+    ann["source_label_id"] = child_id
+    ann["source_label_name"] = child_name
+    return ann
+
+
+def _children(anns):
+    out = {}
+    for a in anns:
+        if a.get("source_label_id") is not None:
+            out.setdefault(a["source_label_id"], set()).add(a["asset_id"])
+    return {k: len(v) for k, v in out.items()}
+
+
+def test_children_count_toward_train_label_and_balance():
+    anns = [_child(i, RAT, i, "Rat") for i in range(1, 1001)]
+    anns += [_child(5000 + i, VULPES, 5000 + i, "Vulpes") for i in range(1, 1001)]
+    limited = limit_annotations_per_label(anns, max_per_label=500)
+    assert len({a["asset_id"] for a in limited}) == 500
+    assert _children(limited) == {RAT: 250, VULPES: 250}
+
+
+def test_children_fill_from_larger_child_when_one_runs_out():
+    anns = [_child(i, RAT, i, "Rat") for i in range(1, 1001)]
+    anns += [_child(5000 + i, VULPES, 5000 + i, "Vulpes") for i in range(1, 101)]
+    limited = limit_annotations_per_label(anns, max_per_label=500)
+    assert _children(limited) == {RAT: 400, VULPES: 100}
+
+
+def test_log_lists_child_labels(capsys):
+    anns = [_child(i, RAT, i, "Rat") for i in range(1, 11)]
+    anns += [_child(100 + i, VULPES, 100 + i, "Vulpes") for i in range(1, 11)]
+    apply_train_asset_limits(anns, max_per_label=10)
+    out = capsys.readouterr().out
+    assert "Animal (id=500): 10 photos" in out
+    assert "Rat (id=501): 5 photos" in out
+    assert "Vulpes (id=502): 5 photos" in out
