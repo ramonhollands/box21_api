@@ -5,6 +5,9 @@ Given a train_config_id and project_id, resolves labels and filters from the con
 fetches annotations via the filter-boxes API, downloads asset images, and writes
 a manifest (labels.txt, train/valid split, summary) so the layout matches what
 the worker would use for that config.
+
+``min_labels`` and ``max_labels`` from the train config limit training photos
+per label the same way the worker does. Validation photos are not limited.
 """
 
 import json
@@ -20,6 +23,7 @@ import requests
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 
+from .asset_limits import apply_train_asset_limits, bounds_from_meta, _parse_positive_int
 from .box21_api import Box21Api
 from .box21_export import get_user_input, get_password, select_from_list
 
@@ -892,7 +896,22 @@ def _print_filtering_status(meta: Optional[Dict[str, Any]], crop_mode: bool = Fa
     required_labels = (meta or {}).get("required_labels") or ""
     required_labels_set = bool(required_labels and str(required_labels).strip())
     crop_on = (meta or {}).get("crop_on_label") or (meta or {}).get("crop_label")
+    max_raw, min_raw = bounds_from_meta(meta)
+    max_n = _parse_positive_int(max_raw)
+    min_n = _parse_positive_int(min_raw)
     print("Filtering in this export:")
+    if max_n > 0:
+        print(
+            "  - Assets per label: applied to the training set"
+            f" (min={min_n or 'none'}, max={max_n})"
+        )
+    elif min_n > 0:
+        print(
+            "  - Assets per label: minimum is set but maximum is unset,"
+            " so every training photo is kept"
+        )
+    else:
+        print("  - Assets per label: not set (all training photos kept)")
     if crop_mode:
         print("  - Only annotations contained in: applied (crop-on label)", repr(crop_on))
         print("  - Required labels in crop: applied" + (f" (required: {repr(required_labels.strip())})" if required_labels_set else " (none set)"))
@@ -908,7 +927,20 @@ def _filtering_info_from_meta(meta: Optional[Dict[str, Any]], crop_mode: bool = 
     required_labels = (meta or {}).get("required_labels") or ""
     required_labels_set = bool(required_labels and str(required_labels).strip())
     crop_on = (meta or {}).get("crop_on_label") or (meta or {}).get("crop_label")
+    max_raw, min_raw = bounds_from_meta(meta)
+    max_n = _parse_positive_int(max_raw)
+    min_n = _parse_positive_int(min_raw)
     return {
+        "assets_per_label": {
+            "min_labels": min_n or None,
+            "max_labels": max_n or None,
+            "applied_to_training_set": max_n > 0,
+            "note": (
+                "Training photos per label. A photo counts once for each label on it. "
+                "The minimum may push another label over its maximum. "
+                "Validation photos are not limited."
+            ),
+        },
         "required_labels_in_crop": {
             "config_value": required_labels.strip() if required_labels_set else None,
             "applied_in_this_export": crop_mode,
@@ -1018,16 +1050,23 @@ def run_download(
     name = train_config.get("name") or f"config_{train_config_id}"
     print(f"Train config: {name} (id={train_config_id})")
     annotations = get_annotations_for_train_config(api, project_id, train_config)
-    if not annotations:
-        print("No annotations found for this config.", file=sys.stderr)
-        return False
 
-    # Resolve meta for summary and crop mode
+    # Resolve meta for summary, crop mode, and photo quotas.
     meta_raw = train_config.get("meta")
     try:
         train_config_meta = json.loads(meta_raw) if isinstance(meta_raw, str) else (meta_raw or {})
     except (TypeError, json.JSONDecodeError):
         train_config_meta = {}
+
+    max_labels, min_labels = bounds_from_meta(train_config_meta)
+    annotations = apply_train_asset_limits(
+        annotations,
+        max_per_label=max_labels,
+        min_per_label=min_labels,
+    )
+    if not annotations:
+        print("No annotations found for this config.", file=sys.stderr)
+        return False
     crop_on_label = train_config_meta.get("crop_on_label") or train_config_meta.get("crop_label")
     crop_label_id = train_config_meta.get("crop_label_id")
     required_labels = (train_config_meta.get("required_labels") or "").strip()

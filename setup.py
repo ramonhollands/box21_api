@@ -4,7 +4,7 @@ assert parse_version(setuptools.__version__)>=parse_version('36.2')
 
 # Settings merged from settings.ini
 lib_name = 'box21_api'
-version = '0.0.18'
+version = '0.0.19'
 description = 'Api for Box21.ai'
 keywords = 'nbdev jupyter notebook python'
 author = 'Ramon'
